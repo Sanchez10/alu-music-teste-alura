@@ -1,0 +1,6 @@
+alu-venv
+.env
+__pycache__/
+*.pyc
+venv/
+.env.*
