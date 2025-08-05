@@ -96,3 +96,25 @@ app/
 scripts/                 # Scripts auxiliares
 tests/                   # Testes (em breve)
 ```
+
+## Modelo de LLM
+
+A ideia é utilizar uma LLM open source e que possa rodar localmente, ou seja, tendo um funcionamento inclusive offline. Para isso escolhi o Ollama, mais especificamente o motor "Tinyllama", e então devemos baixá-la e rodar localmente.
+
+https://ollama.com/download
+
+```bash
+ollama pull tinyllama
+```
+
+```bash
+ollama serve
+```
+
+Como estamos usando docker é necessário abrir o WSL no Windows, caso ainda não tenha instalado e descobri a refeência do IP da sua máquina host, para apontar corretamente a requisição da API do Ollama. Rode o seguinte commando no WSL
+
+```bash
+ip route | grep default
+```
+
+E então faremos uma integração para acessar o modelo via **<HOPST_IP>:11434** usando Python
