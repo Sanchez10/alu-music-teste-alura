@@ -18,7 +18,7 @@ def cadastrar_comentario():
     comentario = Comentario(
         texto=texto,
         categoria=resultado["categoria"],
-        tags=",".join(resultado["tags"]),
+        tags_funcionalidades=resultado["tags_funcionalidades"],
         confianca=resultado["confianca"]
     )
     db.session.add(comentario)
@@ -37,7 +37,7 @@ def listar_comentarios():
             "id": comentario.id,
             "texto": comentario.texto,
             "categoria": comentario.categoria,
-            "tags": comentario.tags,
+            "tags_funcionalidades": comentario.tags_funcionalidades,
             "confianca": comentario.confianca
         })
 
