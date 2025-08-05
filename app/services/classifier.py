@@ -2,14 +2,31 @@ import requests
 import json
 import re
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 def classificar_comentario(texto):
     prompt = f"""
-Classifique o seguinte comentário musical do usuário:
+Você é um classificador de comentários musicais.
 
-{texto}
+Classifique o comentário a seguir:
 
-Retorne apenas um JSON neste formato:
+\"\"\"{texto}\"\"\"
 
+Responda com **apenas** um JSON. Nenhum outro texto. Nenhum markdown. Nenhum comentário.
+
+Formato obrigatório:
+{{
+  "categoria": "<ELOGIO|CRÍTICA|SUGESTÃO|DÚVIDA|SPAM>",
+  "tags_funcionalidades": [
+    {{
+      "codigo": "nome_tecnico",
+      "explicacao": "descrição curta da funcionalidade"
+    }}
+  ],
+  "confianca": 0.85
+}}
+
+Exemplo válido:
 {{
   "categoria": "CRÍTICA",
   "tags_funcionalidades": [
@@ -20,8 +37,6 @@ Retorne apenas um JSON neste formato:
   ],
   "confianca": 0.72
 }}
-
-Apenas o JSON. Nenhum outro texto.
 """
 
     try:
@@ -36,11 +51,10 @@ Apenas o JSON. Nenhum outro texto.
             raw = response.json().get("response", "")
             print("[LLM DEBUG] Raw content in 'response':", raw)
 
-            # Regex corrigida
-            json_candidates = re.findall(r'\{.*?\}', raw, re.DOTALL)
-            for candidate in json_candidates:
+            match = re.search(r'\{[\s\S]*\}', raw)
+            if match:
                 try:
-                    parsed = json.loads(candidate)
+                    parsed = json.loads(match.group(0))
                     if (
                         isinstance(parsed, dict)
                         and parsed.get("categoria") in ["ELOGIO", "CRÍTICA", "SUGESTÃO", "DÚVIDA", "SPAM"]
@@ -51,6 +65,8 @@ Apenas o JSON. Nenhum outro texto.
                         return parsed
                 except Exception as e:
                     print(f"[LLM ERROR] Falha ao decodificar JSON extraído: {e}")
+            else:
+                print("[LLM ERROR] Nenhum JSON encontrado na resposta.")
         else:
             print(f"[LLM ERROR] Status code: {response.status_code}")
 
@@ -65,3 +81,24 @@ Apenas o JSON. Nenhum outro texto.
         ],
         "confianca": 0.80
     }
+
+def classificar_comentarios_em_lote(lista_textos):
+    resultados = []
+    max_threads = min(10, len(lista_textos))
+
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
+        futuros = {executor.submit(classificar_comentario, texto): texto for texto in lista_textos}
+        
+        for futuro in as_completed(futuros):
+            try:
+                resultado = futuro.result()
+                resultados.append(resultado)
+            except Exception as e:
+                print(f"[LLM ERROR] Erro ao processar comentário em lote: {e}")
+                resultados.append({
+                    "categoria": "ERRO",
+                    "tags_funcionalidades": [],
+                    "confianca": 0.0
+                })
+
+    return resultados

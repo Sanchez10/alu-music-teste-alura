@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.models.comentario import Comentario
 from app import db
 from app.utils.auth import token_required
-from app.services.classifier import classificar_comentario
+from app.services.classifier import classificar_comentario, classificar_comentarios_em_lote
 
 comentarios_bp = Blueprint("comentarios", __name__)
 
@@ -42,3 +42,34 @@ def listar_comentarios():
         })
 
     return jsonify(resultado)
+
+
+@comentarios_bp.route("/lote", methods=["POST"])
+@token_required
+def cadastrar_comentarios_em_lote():
+    dados = request.get_json()
+    lista_textos = dados.get("comentarios", [])
+
+    if not isinstance(lista_textos, list) or not all(isinstance(t, str) for t in lista_textos):
+        return jsonify({"erro": "Envie um JSON com uma lista de strings em 'comentarios'"}), 400
+
+    resultados = classificar_comentarios_em_lote(lista_textos)
+
+    comentarios_salvos = []
+    for texto, resultado in zip(lista_textos, resultados):
+        comentario = Comentario(
+            texto=texto,
+            categoria=resultado["categoria"],
+            tags_funcionalidades=resultado["tags_funcionalidades"],
+            confianca=resultado["confianca"]
+        )
+        db.session.add(comentario)
+        comentarios_salvos.append({
+            "texto": texto,
+            "categoria": resultado["categoria"],
+            "tags_funcionalidades": resultado["tags_funcionalidades"],
+            "confianca": resultado["confianca"]
+        })
+
+    db.session.commit()
+    return jsonify(comentarios_salvos), 201
