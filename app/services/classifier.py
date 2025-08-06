@@ -102,3 +102,28 @@ def classificar_comentarios_em_lote(lista_textos):
                 })
 
     return resultados
+
+def gerar_resumo_llm(lista_de_textos):
+    prompt = f"""
+Você é um assistente musical. Resuma os seguintes comentários de usuários sobre músicas, clipes ou artistas.
+Destaque elogios, críticas, sugestões e dúvidas recorrentes.
+
+Comentários:
+{chr(10).join(lista_de_textos)}
+
+Resuma de forma clara e objetiva em até 8 frases.
+"""
+
+    try:
+        response = requests.post(
+            "http://172.22.64.1:11434/api/generate",
+            json={"model": "tinyllama", "prompt": prompt, "stream": False},
+            timeout=30
+        )
+        if response.status_code == 200:
+            raw = response.json().get("response", "")
+            return raw.strip()
+    except Exception as e:
+        print(f"[LLM ERROR] Erro no resumo semanal: {e}")
+
+    return "Resumo não pôde ser gerado automaticamente. Nenhuma tendência clara foi observada."

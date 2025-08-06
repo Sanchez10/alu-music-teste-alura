@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard</title>
+</head>
+<body>
+  <h1>Dashboard de Comentários</h1>
+  <form method="GET" action="{{ url_for('dashboard.dashboard') }}">
+    <label>Categoria:</label>
+    <select name="categoria">
+      <option value="">Todas</option>
+      {% for cat in ['ELOGIO', 'CRÍTICA', 'SUGESTÃO', 'DÚVIDA', 'SPAM'] %}
+        <option value="{{ cat }}" {% if request.args.get('categoria') == cat %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Tag:</label>
+    <input type="text" name="tag" value="{{ request.args.get('tag', '') }}">
+
+    <input type="submit" value="Filtrar">
+  </form>
+
+  <br><br>
+
+  <table border="1">
+    <tr>
+      <th>ID</th>
+      <th>Texto</th>
+      <th>Categoria</th>
+      <th>Tags</th>
+      <th>Confiança</th>
+      <th>Criado em</th>
+    </tr>
+    {% for c in comentarios %}
+    <tr>
+      <td>{{ c.id }}</td>
+      <td>{{ c.texto }}</td>
+      <td>{{ c.categoria }}</td>
+      <td>
+        <ul>
+          {% for tag in c.tags_funcionalidades %}
+            <li>{{ tag.codigo }}: {{ tag.explicacao }}</li>
+          {% endfor %}
+        </ul>
+      </td>
+      <td>{{ '%.2f'|format(c.confianca * 100) }}%</td>
+      <td>{{ c.criado_em.strftime('%d/%m/%Y %H:%M') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <br>
+  <a href="{{ url_for('dashboard.exportar_csv') }}">Exportar CSV</a> |
+  <a href="{{ url_for('dashboard.logout') }}">Sair</a>
+</body>
+</html>
