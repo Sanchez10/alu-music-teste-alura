@@ -6,11 +6,20 @@ from dotenv import load_dotenv
 
 db = SQLAlchemy()
 
-def create_app():
+def create_app(testing=False):
     load_dotenv()
 
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+
+    if testing:
+        # Configuração para testes
+        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///:memory:"
+        app.config['TESTING'] = True
+    else:
+        # Configuração padrão (produção/desenvolvimento)
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+        app.config['TESTING'] = False
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev")
 
