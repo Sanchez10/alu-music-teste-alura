@@ -1,0 +1,16 @@
+[
+  {
+    "texto": "Achei muito ruim esse clipe",
+    "esperado": {
+      "categoria": "CRÍTICA",
+      "tags_funcionalidades": [{"codigo": "clip_narrativa", "explicacao": "Narrativa ruim"}]
+    }
+  },
+  {
+    "texto": "Adorei o solo de guitarra",
+    "esperado": {
+      "categoria": "ELOGIO",
+      "tags_funcionalidades": [{"codigo": "instrumentacao", "explicacao": "Solo destacado"}]
+    }
+  }
+]
