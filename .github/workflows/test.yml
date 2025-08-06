@@ -2,14 +2,51 @@ name: Run Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  test:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      python-version: ${{ steps.set-version.outputs.python }}
+    steps:
+      - name: Set Python version
+        id: set-version
+        run: echo "::set-output name=python::3.10"
 
+  unit:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+      - run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pytest tests/unit --cov=app --cov-report=term-missing
+
+  eval:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+      - run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pytest tests/eval --cov=app --cov-report=term-missing
+
+  integration:
+    needs: setup
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:13
@@ -17,40 +54,22 @@ jobs:
           POSTGRES_DB: testdb
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpass
-        ports: ['5432:5432']
+        ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     env:
       DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
       SECRET_KEY: testkey
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
-
-    - name: Install dependencies
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install -U pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
-
-    - name: Run tests with coverage
-      run: |
-        source venv/bin/activate
-        pytest --cov=app --cov-report=term-missing
-
-    - name: Fail if coverage below threshold (exemplo: 50%)
-      run: |
-        source venv/bin/activate
-        coverage report --fail-under=50
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+      - run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pytest tests/integration --cov=app --cov-report=term-missing
