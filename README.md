@@ -1,4 +1,4 @@
-# Alu Music - Teste de Desenvolvedor Python com LLMs
+# Alu Music - Teste Python com LLMs
 
 Este projeto foi desenvolvido como parte de um desafio técnico Python com foco em LLMs. A aplicação permite ingestão, classificação e análise de comentários sobre músicas, shows e álbuns. Ao longo do desenvolvimento, buscou-se atender requisitos funcionais e não funcionais utilizando boas práticas de engenharia de software, integração com modelos de linguagem, CI/CD e ferramentas modernas de visualização e persistência.
 
